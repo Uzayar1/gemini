@@ -1,1 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Gemini Voice Chat</title>
+</head>
+<body>
 
+<h2>Gemini Voice Chat</h2>
+
+<div id="chat"></div>
+<button onclick="startVoice()">🎤 Speak</button>
+
+<script>
+const chatDiv = document.getElementById("chat");
+
+function addMessage(sender, text){
+    chatDiv.innerHTML += `<p><b>${sender}:</b> ${text}</p>`;
+}
+
+// Web Speech API
+function startVoice(){
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-US";
+    recognition.start();
+
+    recognition.onresult = async (event) => {
+        const userMessage = event.results[0][0].transcript;
+        addMessage("You", userMessage);
+
+        // Send to proxy server
+        const response = await fetch("http://YOUR_SERVER_IP:3000/gemini", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: userMessage })
+        });
+
+        const data = await response.json();
+        addMessage("Gemini", data.reply);
+    };
+}
+</script>
+
+</body>
+</html>
